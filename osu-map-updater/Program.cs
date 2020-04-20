@@ -10,7 +10,8 @@ using CircleHelper.Data;
 using CircleHelper.Parsing;
  using Newtonsoft.Json;
  using PuppeteerSharp;
-using Serilog;
+  using PuppeteerSharp.Input;
+  using Serilog;
 using Serilog.Core;
 
  namespace osumapupdate
@@ -50,9 +51,7 @@ using Serilog.Core;
             }
 
             //Load .db file
-            DatabaseParser dp = new DatabaseParser();
-
-            DatabaseMeta dm = dp.Parse(c.DatabasePath);
+            Database dm = DatabaseParser.Parse(c.DatabasePath);
 
             if (dm == null)
             {
@@ -105,7 +104,8 @@ using Serilog.Core;
 
                 try
                 {
-                    await page.GoToAsync($"https://osu.ppy.sh/beatmapsets/{bs.id}/download");
+                    await page.GoToAsync($"https://osu.ppy.sh/beatmapsets/{bs.id}/");
+                    await page.ClickAsync(".js-beatmapset-download-link");
                 }
                 catch (Exception e)
                 {
@@ -135,38 +135,6 @@ using Serilog.Core;
 
             //Close browser
             await mainBrowser.CloseAsync();
-            
-            FileInfo[] queue = downloads.GetFiles("*.osz");
-
-            Process proc = new Process()
-            {
-                StartInfo = new ProcessStartInfo()
-                {
-                    FileName = $"\"{ c.DatabasePath.Replace(".db", ".exe") }\""
-                }
-            };
-                
-            proc.Start();
-            
-            Thread.Sleep(10000);
-
-            //Open maps in osu!
-            foreach(FileInfo fi in queue)
-            {
-                Log.Information("Extracting {0}", fi.Name);
-                
-                proc = new Process()
-                {
-                    StartInfo = new ProcessStartInfo()
-                    {
-                        FileName = $"\"{ c.DatabasePath.Replace(".db", ".exe") }\"",
-                        Arguments = $"\"{ fi.FullName }\""
-                    }
-                };
-                
-                proc.Start();
-                proc.WaitForExit();
-            }
         }
     }
 }
