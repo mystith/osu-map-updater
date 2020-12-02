@@ -9,7 +9,8 @@
 using CircleHelper.Data;
 using CircleHelper.Parsing;
  using Newtonsoft.Json;
- using PuppeteerSharp;
+  using Newtonsoft.Json.Linq;
+  using PuppeteerSharp;
   using PuppeteerSharp.Input;
   using Serilog;
 using Serilog.Core;
@@ -88,23 +89,24 @@ using Serilog.Core;
                 
             string responseBody = await response.Content.ReadAsStringAsync();
 
-            List<BeatmapSet> jt = JsonConvert.DeserializeObject<RootObject>(responseBody).beatmapsets
-                .Where(
-                    o => o.beatmaps.Any(
-                        bm => c.Modes.Any(bm.mode.Equals) 
-                              && bm.difficulty_rating > c.MinimumDifficulty
-                              && dm.Beatmaps.All(a => a.BeatmapID != bm.id))).ToList();
+            IEnumerable<JToken> jt = JsonConvert.DeserializeObject<JToken>(responseBody)["beatmapsets"].Where(a => //reduce downloads
+                a["beatmaps"].Any(b => //make sure at least one of the beatmaps meet criteria
+                    b["difficulty_rating"].Value<double>() >= c.MinimumDifficulty //difficulty criteria
+                    && c.Modes.Any(b["mode"].Value<string>().Equals) //mode criteria
+                    && dm.Beatmaps.All(d => d.BeatmapID != b["beatmapset_id"].Value<int>()) //make sure map doesn't already exist
+                )
+            );
 
             int i = 1;
             //Download maps
-            foreach (BeatmapSet bs in jt)
+            foreach (JToken bs in jt)
             {
-                Log.Information("Downloading [ {0} ] by {1}  [ {2} / {3} ]", bs.title, bs.creator, i, jt.Count);
+                Log.Information("Downloading [ {0} ] by {1}  [ {2} / {3} ]", bs["title"].Value<string>(), bs["creator"].Value<string>(), i, jt.Count());
                 Page page = await mainBrowser.NewPageAsync();
 
                 try
                 {
-                    await page.GoToAsync($"https://osu.ppy.sh/beatmapsets/{bs.id}/");
+                    await page.GoToAsync($"https://osu.ppy.sh/beatmapsets/{bs["id"].Value<string>()}/");
                     await page.ClickAsync(".js-beatmapset-download-link");
                 }
                 catch (Exception e)
@@ -124,7 +126,7 @@ using Serilog.Core;
 
                 i++;
                 
-                Thread.Sleep(500);
+                Thread.Sleep(3000);
             }
 
             //Get downloads folder
