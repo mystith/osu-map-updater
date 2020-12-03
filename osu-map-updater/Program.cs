@@ -73,7 +73,7 @@ using Serilog.Core;
             await p.GoToAsync("https://osu.ppy.sh/home");
 
             //Force login
-            bool loggedIn = (await p.GetContentAsync()).Contains("/users/");
+            bool loggedIn = (await p.GetContentAsync()).Contains("js-current-user-avatar");
 
             if (!loggedIn)
                 Log.Information("Please log in to the osu website.");
@@ -81,7 +81,7 @@ using Serilog.Core;
             while (!loggedIn)
             {
                 Thread.Sleep(500);
-                loggedIn = (await p.GetContentAsync()).Contains("/users/");
+                loggedIn = (await p.GetContentAsync()).Contains("js-current-user-avatar");
             }
 
             //Begin searching maps
