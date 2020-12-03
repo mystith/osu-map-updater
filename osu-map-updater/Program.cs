@@ -38,13 +38,6 @@ using Serilog.Core;
             ConfigLoader cl = new ConfigLoader();
             Config c = cl.Load();
             
-            lls.MinimumLevel = c.LogDepth;
-            
-            //Download Chromium for login and download
-            Log.Information("Please wait, downloading chromium");
-            await new BrowserFetcher().DownloadAsync(BrowserFetcher.DefaultRevision);
-            Log.Information("Finished downloading chromium");
-            
             if (string.IsNullOrWhiteSpace(c.DatabasePath))
             {
                 Log.Error("osu! database path null (osu!.db in the osu! game folder), please set the path in the config.yaml file!");
@@ -61,6 +54,13 @@ using Serilog.Core;
                 Console.ReadLine();
                 return;
             }
+            
+            lls.MinimumLevel = c.LogDepth;
+            
+            //Download Chromium for login and download
+            Log.Information("Please wait, downloading chromium");
+            await new BrowserFetcher().DownloadAsync(BrowserFetcher.DefaultRevision);
+            Log.Information("Finished downloading chromium");
 
             Browser mainBrowser = await Puppeteer.LaunchAsync(new LaunchOptions
             {
