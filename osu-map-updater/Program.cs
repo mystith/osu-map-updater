@@ -93,7 +93,7 @@ using Serilog.Core;
                 a["beatmaps"].Any(b => //make sure at least one of the beatmaps meet criteria
                     b["difficulty_rating"].Value<double>() >= c.MinimumDifficulty //difficulty criteria
                     && c.Modes.Any(b["mode"].Value<string>().Equals) //mode criteria
-                    && dm.Beatmaps.All(d => d.BeatmapID != b["beatmapset_id"].Value<int>()) //make sure map doesn't already exist
+                    && dm.Beatmaps.All(d => d.BeatmapID != b["id"].Value<int>()) //make sure map doesn't already exist
                 )
             );
 
