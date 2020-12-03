@@ -47,7 +47,8 @@ using Serilog.Core;
             
             if (string.IsNullOrWhiteSpace(c.DatabasePath))
             {
-                Log.Error("osu! database path null, please set the path in the config.yaml file!");
+                Log.Error("osu! database path null (osu!.db in the osu! game folder), please set the path in the config.yaml file!");
+                Console.ReadLine();
                 return;
             }
 
@@ -57,6 +58,7 @@ using Serilog.Core;
             if (dm == null)
             {
                 Log.Error("Database data null.");
+                Console.ReadLine();
                 return;
             }
 
@@ -97,11 +99,12 @@ using Serilog.Core;
                 )
             );
 
+            int mapCount = jt.Count();
             int i = 1;
             //Download maps
             foreach (JToken bs in jt)
             {
-                Log.Information("Downloading [ {0} ] by {1}  [ {2} / {3} ]", bs["title"].Value<string>(), bs["creator"].Value<string>(), i, jt.Count());
+                Log.Information("Downloading [ {0} ] by {1}  [ {2} / {3} ]", bs["title"].Value<string>(), bs["creator"].Value<string>(), i, mapCount);
                 Page page = await mainBrowser.NewPageAsync();
 
                 try
@@ -137,6 +140,7 @@ using Serilog.Core;
 
             //Close browser
             await mainBrowser.CloseAsync();
+            Log.Information("{0} maps downloaded.", mapCount);
         }
     }
 }
